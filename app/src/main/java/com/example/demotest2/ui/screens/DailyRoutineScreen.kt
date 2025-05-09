@@ -4,10 +4,9 @@ import android.app.DatePickerDialog
 import android.widget.DatePicker
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Book
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -22,6 +21,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import java.text.SimpleDateFormat
 import java.util.*
+import com.example.demotest2.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -29,16 +29,21 @@ fun DailyRoutineScreen(navController: NavController) {
     var selectedDate by remember { mutableStateOf(Date()) }
     val schedule = getScheduleForDate(selectedDate)
 
+
+
+    val topBarColor = if (isDarkTheme) BackgroundDarker else BackgroundCardLight
+    val textColor = if (isDarkTheme) TextDark else TextLight
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Daily Routine", color = Color.White) },
+                title = { Text("Daily Routine", color = textColor) },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigate("MainScreen") }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = textColor)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF0D47A1))
+                colors = TopAppBarDefaults.topAppBarColors(topBarColor)
             )
         },
         bottomBar = {
@@ -62,14 +67,19 @@ fun DailyRoutineContent(
     onDateChange: (Date) -> Unit,
     schedule: List<Pair<String, String>>
 ) {
+    val backgroundGradient = remember(isDarkTheme) {
+        Brush.verticalGradient(
+            colors = if (isDarkTheme) {
+                listOf(BackgroundDark, BackgroundDarker)
+            } else {
+                listOf(BackgroundLight, BackgroundCardLight)
+            }
+        )
+    }
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(Color(0xFFBBDEFB), Color(0xFF64B5F6))
-                )
-            )
+            .background(brush = backgroundGradient)
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp),
         horizontalAlignment = Alignment.Start

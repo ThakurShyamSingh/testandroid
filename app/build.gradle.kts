@@ -56,12 +56,12 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.foundation:foundation")
     implementation("androidx.compose.animation:animation")
-    implementation("androidx.compose.material3:material3")
-    implementation("androidx.navigation:navigation-compose:2.5.3")
+    implementation("androidx.compose.material3:material3:<latest_version>")
+    implementation("androidx.navigation:navigation-compose:2.9.0")
 
     implementation("com.airbnb.android:lottie-compose:6.0.1")
     implementation("com.google.accompanist:accompanist-systemuicontroller:0.30.1")
-    implementation ("androidx.compose.material:material-icons-extended:1.4.0")
+    implementation ("androidx.compose.material:material-icons-extended:1.7.8")
 
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)

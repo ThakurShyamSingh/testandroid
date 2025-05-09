@@ -5,9 +5,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CameraRoll
-import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -55,7 +54,7 @@ fun AttendanceScreen(navController: NavController) {
                 navigationIcon = {
                     IconButton(onClick = { navController.navigate("MainScreen") }) {
                         Icon(
-                            imageVector = Icons.Default.ArrowBack,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
                             tint = textColor
                         )
@@ -79,6 +78,7 @@ fun AttendanceScreen(navController: NavController) {
 
 @Composable
 fun AttendanceContent(modifier: Modifier, navController: NavController) {
+    navController.context
     Column(
         modifier = modifier
             .fillMaxSize(),
@@ -107,7 +107,6 @@ fun AttendanceContent(modifier: Modifier, navController: NavController) {
                 title = "IT-B",
                 description = "Tap to take attendance",
                 backgroundColor = if (isDarkTheme) BlueTrue else BackgroundCardLight,
-
                 onClick = { /* Handle IT-B Click */ }
             )
             ClassCard(
@@ -125,16 +124,20 @@ fun ClassCard(
     title: String,
     description: String,
     backgroundColor: androidx.compose.ui.graphics.Color,
-
     onClick: () -> Unit
 ) {
+    var attendanceMarked = false // Placeholder for attendance status
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .height(100.dp),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = backgroundColor),
-        onClick = onClick
+        colors = CardDefaults.cardColors(backgroundColor),
+        onClick = {
+            onClick() // Perform the action
+            attendanceMarked = !attendanceMarked // Toggle attendance status
+        }
     ) {
         Row(
             modifier = Modifier
@@ -171,13 +174,14 @@ fun ClassCard(
                 modifier = Modifier
                     .size(48.dp)
                     .clip(CircleShape)
-                    .background(( if (isDarkTheme) TextDark else TextLight).copy(alpha = 0.3f)),
+                    .background((if (isDarkTheme) TextDark else TextLight).copy(alpha = 0.3f)),
                 contentAlignment = Alignment.Center
             ) {
+                // Change the icon based on attendance status
                 Icon(
-                    imageVector = Icons.Default.Cancel,
-                    contentDescription = "Mark Attendance",
-                    tint =  if (isDarkTheme) TextDark else TextLight
+                    imageVector = if (attendanceMarked) Icons.Default.Check else Icons.Default.CameraRoll,
+                    contentDescription = if (attendanceMarked) "Attendance Marked" else "Mark Attendance",
+                    tint = if (attendanceMarked) GreenAccent else TextLight
                 )
             }
         }

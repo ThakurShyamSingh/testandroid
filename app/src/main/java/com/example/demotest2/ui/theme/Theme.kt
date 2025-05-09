@@ -14,7 +14,8 @@ private val LightColorScheme = lightColorScheme(
     onPrimary = Color.White,
     onSecondary = Color.White,
     onBackground = TextLight,
-    onSurface = TextLight
+    onSurface = TextLight,
+    tertiary = GreenAccent // Added Green Accent for Light theme
 )
 
 private val DarkColorScheme = darkColorScheme(
@@ -25,7 +26,8 @@ private val DarkColorScheme = darkColorScheme(
     onPrimary = Color.Black,
     onSecondary = Color.Black,
     onBackground = TextDark,
-    onSurface = TextDark
+    onSurface = TextDark,
+    tertiary = GreenAccentDark // Added Green Accent for Dark theme
 )
 
 // Global state for theme toggle

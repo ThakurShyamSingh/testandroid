@@ -6,7 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -17,24 +17,28 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.demotest2.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NewsScreen(navController: NavController) {
+
+    val topBarColor = if (isDarkTheme) BackgroundDarker else BackgroundCardLight
+    val textColor = if (isDarkTheme) Color.White else BlueTrue
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("News", color = Color.White) },
+                title = { Text("News", color = textColor) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) { // Navigate back in the stack
                         Icon(
-                            imageVector = Icons.Default.ArrowBack,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
-                            tint = Color.White
+                            tint = textColor
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF0D47A1))
+                colors = TopAppBarDefaults.topAppBarColors(topBarColor)
             )
         },
         bottomBar = { BottomNavigationBar(navController, "NewsScreen") },
@@ -49,14 +53,19 @@ fun NewsScreen(navController: NavController) {
 @Composable
 fun NewsContent(modifier: Modifier) {
     val posters = listOf("Poster 1", "Poster 2", "Poster 3") // Add your poster data here
-
+    val backgroundGradient = Brush.verticalGradient(
+        colors = if (isDarkTheme) {
+            listOf(BackgroundDark, Color.Black)
+        } else {
+            listOf(BackgroundLight, Color.White)
+        }
+    )
+   val textColor = if (isDarkTheme) Color.White else BlueTrue
     Column(
         modifier = modifier
             .fillMaxSize()
             .background(
-                Brush.verticalGradient(
-                    colors = listOf(Color(0xFFE3F2FD), Color(0xFF90CAF9))
-                )
+                brush = backgroundGradient,
             )
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -66,7 +75,7 @@ fun NewsContent(modifier: Modifier) {
         Text(
             text = "Latest Events",
             style = TextStyle(
-                color = Color(0xFF0D47A1),
+                color = textColor ,
                 fontSize = 24.sp,
                 fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
             ),
@@ -91,7 +100,7 @@ fun NewsCard(title: String) {
             .fillMaxWidth()
             .height(150.dp),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF1E88E5))
+        colors = CardDefaults.cardColors(containerColor =(if (isDarkTheme) BlueTrue else BackgroundCardLight) )
     ) {
         Box(
             contentAlignment = Alignment.Center,
@@ -100,7 +109,7 @@ fun NewsCard(title: String) {
             Text(
                 text = title,
                 style = TextStyle(
-                    color = Color.White,
+                    color = if (isDarkTheme) TextDark else TextLight,
                     fontSize = 18.sp,
                     fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
                 )

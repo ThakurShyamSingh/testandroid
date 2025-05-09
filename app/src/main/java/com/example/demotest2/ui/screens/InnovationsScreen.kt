@@ -4,7 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -15,20 +15,32 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.demotest2.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InnovationsScreen(navController: NavController) {
+    val backgroundGradient = Brush.verticalGradient(
+        colors = if (isDarkTheme) {
+            listOf(BackgroundDark, Color.Black)
+        } else {
+            listOf(BackgroundLight, Color.White)
+        }
+    )
+
+    val topBarColor = if (isDarkTheme) BackgroundDarker else BackgroundCardLight
+    val textColor = if (isDarkTheme) Color.White else BlueTrue
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Innovations", color = Color.White) },
+                title = { Text("Innovations", color = textColor) },
                 navigationIcon = {
-                    IconButton({navController.navigate("MainScreen")}) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
+                    IconButton({navController.popBackStack()}) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = textColor)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF0D47A1))
+                colors = TopAppBarDefaults.topAppBarColors(topBarColor)
             )
         },
         bottomBar = {
@@ -38,11 +50,7 @@ fun InnovationsScreen(navController: NavController) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(Color(0xFFE3F2FD), Color(0xFF90CAF9))
-                        )
-                    )
+                    .background(brush = backgroundGradient)
                     .padding(padding)
             ) {
                 Column(
@@ -56,7 +64,7 @@ fun InnovationsScreen(navController: NavController) {
                     Text(
                         text = "Explore Innovations",
                         style = TextStyle(
-                            color = Color(0xFF0D47A1),
+                            color = textColor,
                             fontSize = 24.sp,
                             fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
                         )

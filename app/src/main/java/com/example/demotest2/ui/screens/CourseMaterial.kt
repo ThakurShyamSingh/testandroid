@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -19,26 +19,31 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.demotest2.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CourseMaterialScreen(navController: NavController) {
+
+
+    val topBarColor = if (isDarkTheme) BackgroundDarker else BackgroundCardLight
+    val textColor = if (isDarkTheme) Color.White else BlueTrue
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Course Material", color = Color.White) },
+                title = { Text("Course Material", color = textColor) },
                 navigationIcon = {
                     IconButton(onClick = {
                         navController.navigate("ClassSelectionScreen") // Navigate back in the stack
                     }) {
                         Icon(
-                            imageVector = Icons.Default.ArrowBack,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
-                            tint = Color.White
+                            tint = textColor
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF0D47A1))
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = topBarColor)
             )
         },
         bottomBar = { BottomNavigationBar(navController, "--") },
@@ -62,13 +67,20 @@ fun CourseMaterialContent(
     onFileClick: (String) -> Unit,
     onNewFileClick: () -> Unit
 ) {
+    val backgroundGradient = Brush.verticalGradient(
+        colors = if (isDarkTheme) {
+            listOf(BackgroundDark, Color.Black)
+        } else {
+            listOf(BackgroundLight, Color.White)
+        }
+    )
+
+    val textColor = if (isDarkTheme) Color.White else BlueTrue
     Column(
         modifier = modifier
             .fillMaxSize()
             .background(
-                Brush.verticalGradient(
-                    colors = listOf(Color(0xFFBBDEFB), Color(0xFF64B5F6))
-                )
+                brush =backgroundGradient,
             )
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -80,7 +92,7 @@ fun CourseMaterialContent(
         Text(
             text = "Recent Uploads",
             style = TextStyle(
-                color = Color(0xFF0D47A1),
+                color = textColor,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold
             ),
@@ -93,9 +105,13 @@ fun CourseMaterialContent(
                 .fillMaxWidth()
                 .padding(bottom = 16.dp),
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.LightGray)
+            colors = CardDefaults.cardColors(if (isDarkTheme) BlueTrue else BackgroundCardLight,)
         ) {
-            Column(modifier = Modifier.padding(16.dp)) {
+            Column(
+                modifier = Modifier.padding(16.dp)
+                    .height(100.dp),
+
+                ) {
                 val files = listOf("File1.pdf", "File2.pdf", "File3.pdf")
                 files.forEach { file ->
                     FileItem(fileName = file, onClick = { onFileClick(file) })

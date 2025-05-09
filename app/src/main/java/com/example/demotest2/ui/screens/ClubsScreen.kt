@@ -6,7 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -18,25 +18,31 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.demotest2.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ClubsScreen(navController: NavController) {
+
+
+    val topBarColor = if (isDarkTheme) BackgroundDarker else BackgroundCardLight
+    val textColor = if (isDarkTheme) Color.White else BlueTrue
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Clubs", color = Color.White) },
+                title = { Text("Clubs", color = textColor) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
-                            imageVector = Icons.Default.ArrowBack,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
-                            tint = Color.White
+                            tint = textColor
                         )
                     }
                 },
 
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF0D47A1))
+                colors = TopAppBarDefaults.topAppBarColors(topBarColor)
             )
         },
         bottomBar = { BottomNavigationBar(navController, "--") },
@@ -50,17 +56,25 @@ fun ClubsScreen(navController: NavController) {
 
 @Composable
 fun ClubsContent(modifier: Modifier) {
+    val backgroundGradient = Brush.verticalGradient(
+        colors = if (isDarkTheme) {
+            listOf(BackgroundDark, Color.Black)
+        } else {
+            listOf(BackgroundLight, Color.White)
+        }
+    )
+
     val clubs = listOf("Akrithi Club", "Lexis Club", "Sports Club") // List of clubs
 
     Column(
         modifier = modifier
             .fillMaxSize()
             .background(
-                Brush.verticalGradient(
-                    colors = listOf(Color(0xFFE3F2FD), Color(0xFF90CAF9))
-                )
+                brush = backgroundGradient
             )
-            .padding(16.dp)
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Top
     ) {
         // Title
         Text(
@@ -86,13 +100,16 @@ fun ClubsContent(modifier: Modifier) {
 }
 
 @Composable
-fun ClubCard(clubName: String, onAddClick: () -> Unit) {
+fun ClubCard(
+    clubName: String,
+    onAddClick: () -> Unit,
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .height(70.dp),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor =(if (isDarkTheme) BlueTrue else BackgroundCardLight)),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Row(
@@ -105,7 +122,7 @@ fun ClubCard(clubName: String, onAddClick: () -> Unit) {
             Text(
                 text = clubName,
                 style = TextStyle(
-                    color = Color(0xFF0D47A1),
+                    color = if (isDarkTheme) TextDark else TextLight,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -114,7 +131,7 @@ fun ClubCard(clubName: String, onAddClick: () -> Unit) {
                 Text(
                     text = "Apply",
                     style = TextStyle(
-                        color = Color(0xFF1E88E5),
+                        color = (if (isDarkTheme) TextDark else TextLight).copy(alpha = 0.8f),
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Medium
                     )

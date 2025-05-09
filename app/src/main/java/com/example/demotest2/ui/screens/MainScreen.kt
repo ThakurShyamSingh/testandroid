@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Article
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -15,7 +16,6 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.demotest2.ui.theme.*
 
@@ -204,8 +204,8 @@ fun BottomNavigationBar(navController: NavController, currentRoute: String) {
     ) {
         val items = listOf(
             Triple("MainScreen", Icons.Filled.Home, "Home"),
-            Triple("NewsScreen", Icons.Filled.Article, "News"),
-            Triple("CourseMaterialScreen", Icons.Filled.School, "Materials"),
+            Triple("NewsScreen", Icons.AutoMirrored.Filled.Article, "News"),
+            Triple("ClassSelectionScreen", Icons.Filled.School, "Materials"),
             Triple("ProfileScreen", Icons.Filled.Person, "Profile")
         )
 
@@ -231,7 +231,7 @@ fun BottomNavigationBar(navController: NavController, currentRoute: String) {
                         }
                     }
                 },
-                alwaysShowLabel = false
+                alwaysShowLabel = true
             )
         }
     }
