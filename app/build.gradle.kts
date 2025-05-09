@@ -44,45 +44,32 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
+
     implementation(platform(libs.androidx.compose.bom))
+
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+
+    implementation("androidx.compose.ui:ui")
+    implementation("androidx.compose.ui:ui-tooling-preview")
+    implementation("androidx.compose.foundation:foundation")
+    implementation("androidx.compose.animation:animation")
+    implementation("androidx.compose.material3:material3")
+    implementation("androidx.navigation:navigation-compose:2.5.3")
+
+    implementation("com.airbnb.android:lottie-compose:6.0.1")
+    implementation("com.google.accompanist:accompanist-systemuicontroller:0.30.1")
+    implementation ("androidx.compose.material:material-icons-extended:1.4.0")
+
+    debugImplementation(libs.androidx.ui.tooling)
+    debugImplementation(libs.androidx.ui.test.manifest)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.ui.test.junit4)
-    debugImplementation(libs.androidx.ui.tooling)
-    debugImplementation(libs.androidx.ui.test.manifest)
-
-
-
-
-
-    implementation("androidx.navigation:navigation-compose:2.5.3")
-    implementation( "androidx.compose.ui:ui:1.4.3")
-    implementation("androidx.compose.material3:material3:1.1.0")
-    implementation("androidx.navigation:navigation-compose:2.5.3")
-    implementation("androidx.compose.animation:animation:1.5.0")
-    implementation("androidx.compose.material:material-icons-extended:1.5.0")
-
-    implementation(platform("androidx.compose:compose-bom:2024.03.00"))
-
-    // Material3
-    implementation("androidx.compose.material3:material3")
-
-    // Other Compose dependencies
-    implementation("androidx.compose.ui:ui")
-    implementation("androidx.compose.foundation:foundation")
-    implementation("androidx.compose.material:material") // Optional, for Material2 components
-    implementation("androidx.compose.ui:ui-tooling-preview")
-    debugImplementation("androidx.compose.ui:ui-tooling")
-    implementation("androidx.compose.material3:material3:1.2.0-alpha05")
-    implementation ("androidx.compose.ui:ui:1.5.0")
-    implementation ("androidx.compose.ui:ui-tooling:1.5.0")
-    implementation ("com.airbnb.android:lottie-compose:6.0.1")
-
 
 }

@@ -3,20 +3,18 @@ package com.example.demotest2.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Primary accent: True Blue (crisp, modern)
-val BlueTrue = Color(0xFF137DC5)
+// Light Theme Colors
+val BlueTrue = Color(0xFF1E88E5) // iOS-like vibrant blue
+val RedAccent = Color(0xFFE53935)
+val CreamSoft = Color(0xFFFFF8E1)
+val BackgroundLight = Color(0xFFF1F5F9) // subtle soft background
+val BackgroundCardLight = Color(0xFFFFFFFF)
+val TextLight = Color(0xFF111111)
 
-// Secondary accent: Fire Engine Red (bold, attention-grabbing)
-val RedFire = Color(0xFFBF1922)
-
-// Warm neutral: Wood (balances vibrant hues)
-val WoodWarm = Color(0xFFB17A50)
-
-// Soft neutral: Cream (light background in light mode)
-val CreamSoft = Color(0xFFF7E8D3)
-
-// Dark background: Midnight (deep, low-strain dark mode)
-val BackgroundDark = Color(0xFF112D4E)
-
-// Light background: Light Gray (soft on eyes in light mode)
-val BackgroundLight = Color(0xFFF2F2F2)
+// Dark Theme Colors
+val BackgroundDark = Color(0xFF121212)
+val BackgroundDarker = Color(0xFF0D0D0D)
+val RedAccentDark = Color(0xFFEF5350)
+val BackgroundCardDark = Color(0xFF1E1E1E)
+val TextDark = Color(0xFFF5F5F5)
+val BlueAccentDark = Color(0xFF90CAF9)

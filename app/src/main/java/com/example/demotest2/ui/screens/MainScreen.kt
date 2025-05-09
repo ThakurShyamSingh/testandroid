@@ -1,51 +1,69 @@
-// File: ui/screens/MainScreen.kt
 package com.example.demotest2.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.demotest2.R
 import com.example.demotest2.ui.theme.*
-import androidx.compose.foundation.isSystemInDarkTheme
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(navController: NavController) {
     val backgroundGradient = Brush.verticalGradient(
-        colors = listOf(BackgroundLight, Color.White)
+        colors = if (isDarkTheme) {
+            listOf(BackgroundDark, Color.Black)
+        } else {
+            listOf(BackgroundLight, Color.White)
+        }
     )
 
+    val topBarColor = if (isDarkTheme) BackgroundDarker else BackgroundCardLight
+    val textColor = if (isDarkTheme) Color.White else BlueTrue
 
     Scaffold(
         topBar = {
             TopAppBar(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(bottomEnd = 8.dp, bottomStart = 8.dp))
+                    .background(topBarColor),
                 title = {
                     Text(
                         "FACELYNX Dashboard",
-                        style = TextStyle(color = BlueTrue,fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                        style = MaterialTheme.typography.titleLarge.copy(color = textColor)
                     )
-
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = BackgroundDark)
-
+                actions = {
+                    IconToggleButton(
+                        checked = isDarkTheme,
+                        onCheckedChange = { isDarkTheme = !isDarkTheme }
+                    ) {
+                        Icon(
+                            imageVector = if (isDarkTheme) Icons.Default.Brightness7 else Icons.Default.Brightness4,
+                            contentDescription = "Toggle Theme",
+                            tint = textColor
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = topBarColor)
             )
         },
-        bottomBar = { BottomNavigationBar(navController = navController, currentRoute = "MainScreen") }
+        bottomBar = {
+            BottomNavigationBar(navController = navController, currentRoute = "MainScreen")
+        }
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -59,12 +77,16 @@ fun MainScreen(navController: NavController) {
             Spacer(modifier = Modifier.height(16.dp))
             Text(
                 "Welcome to FACELYNX",
-                style = TextStyle(color = RedFire, fontSize = 28.sp, fontWeight = FontWeight.Bold),
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    color = if (isDarkTheme) RedAccentDark else RedAccent
+                ),
                 modifier = Modifier.padding(bottom = 24.dp)
             )
 
             LazyRow(
-                modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 24.dp),
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -74,7 +96,7 @@ fun MainScreen(navController: NavController) {
                     }
                 }
                 item {
-                    NavigationCard("Register Student", "Add new students", RedFire) {
+                    NavigationCard("Register Student", "Add new students", RedAccent) {
                         navController.navigate("RegisterStudentsScreen")
                     }
                 }
@@ -95,7 +117,7 @@ fun MainScreen(navController: NavController) {
             Spacer(modifier = Modifier.height(24.dp))
             Text(
                 "Powered by FACELYNX",
-                style = TextStyle(color = Color.Gray, fontSize = 14.sp, fontWeight = FontWeight.Light)
+                style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray)
             )
         }
     }
@@ -104,21 +126,29 @@ fun MainScreen(navController: NavController) {
 @Composable
 fun NavigationCard(title: String, description: String, color: Color, onClick: () -> Unit) {
     Card(
+        onClick = onClick,
         modifier = Modifier
             .width(300.dp)
-            .height(200.dp)
-            .shadow(4.dp, RoundedCornerShape(16.dp)),
-        colors = CardDefaults.cardColors(containerColor = color),
+            .height(200.dp),
         shape = RoundedCornerShape(16.dp),
-        onClick = onClick
+        colors = CardDefaults.cardColors(containerColor = color),
+        elevation = CardDefaults.cardElevation(6.dp)
     ) {
         Column(
-            modifier = Modifier.fillMaxSize().padding(16.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
             verticalArrangement = Arrangement.SpaceBetween,
             horizontalAlignment = Alignment.Start
         ) {
-            Text(title, style = TextStyle(color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold))
-            Text(description, style = TextStyle(color = Color.White.copy(alpha = 0.7f), fontSize = 14.sp))
+            Text(
+                title,
+                style = MaterialTheme.typography.titleMedium.copy(color = Color.White)
+            )
+            Text(
+                description,
+                style = MaterialTheme.typography.bodyMedium.copy(color = Color.White.copy(alpha = 0.7f))
+            )
         }
     }
 }
@@ -126,25 +156,33 @@ fun NavigationCard(title: String, description: String, color: Color, onClick: ()
 @Composable
 fun EnhancedCard(title: String, description: String, color: Color, emoji: String, onClick: () -> Unit) {
     Card(
+        onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
             .height(150.dp)
-            .padding(vertical = 8.dp)
-            .shadow(6.dp, RoundedCornerShape(16.dp)),
+            .padding(vertical = 8.dp),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = color),
-        onClick = onClick
+        elevation = CardDefaults.cardElevation(8.dp)
     ) {
         Row(
-            modifier = Modifier.fillMaxSize().padding(16.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(emoji, style = TextStyle(fontSize = 28.sp))
+            Text(emoji, style = MaterialTheme.typography.headlineMedium)
             Spacer(modifier = Modifier.width(16.dp))
             Column {
-                Text(title, style = TextStyle(color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold))
+                Text(
+                    title,
+                    style = MaterialTheme.typography.titleMedium.copy(color = Color.White)
+                )
                 Spacer(modifier = Modifier.height(8.dp))
-                Text(description, style = TextStyle(color = Color.White.copy(alpha = 0.8f), fontSize = 14.sp))
+                Text(
+                    description,
+                    style = MaterialTheme.typography.bodyMedium.copy(color = Color.White.copy(alpha = 0.8f))
+                )
             }
         }
     }
@@ -152,31 +190,32 @@ fun EnhancedCard(title: String, description: String, color: Color, emoji: String
 
 @Composable
 fun BottomNavigationBar(navController: NavController, currentRoute: String) {
-    val isDark = isSystemInDarkTheme()
-    val backgroundColor = MaterialTheme.colorScheme.background
+    val backgroundColor = if (isDarkTheme) BackgroundDarker else BackgroundCardLight
     val selectedColor = BlueTrue
-    val unselectedColor = if (isDark) Color.Gray else Color.DarkGray
+    val unselectedColor = if (isDarkTheme) Color.Gray else Color.DarkGray
 
     NavigationBar(
         modifier = Modifier
+            .shadow(4.dp)
             .fillMaxWidth()
-            .padding(0.dp),
+            .height(56.dp),
         containerColor = backgroundColor,
         contentColor = MaterialTheme.colorScheme.onBackground
     ) {
         val items = listOf(
-            Triple("MainScreen", R.drawable.ic_home, "Home"),            // Home / Dashboard
-            Triple("NewsScreen", R.drawable.ic_newsletter, "News"),      // Newsletter
-            Triple("CourseMaterialScreen", R.drawable.ic_course_material, "Materials"), // Course Material
-            Triple("ProfileScreen", R.drawable.ic_profile, "Profile")    // Profile
+            Triple("MainScreen", Icons.Filled.Home, "Home"),
+            Triple("NewsScreen", Icons.Filled.Article, "News"),
+            Triple("CourseMaterialScreen", Icons.Filled.School, "Materials"),
+            Triple("ProfileScreen", Icons.Filled.Person, "Profile")
         )
 
-        items.forEach { (route, iconRes, description) ->
+        items.forEach { (route, icon, description) ->
             NavigationBarItem(
                 icon = {
                     Icon(
-                        painter = painterResource(id = iconRes),
+                        imageVector = icon,
                         contentDescription = description,
+                        modifier = Modifier.size(24.dp),
                         tint = if (currentRoute == route) selectedColor else unselectedColor
                     )
                 },
@@ -192,7 +231,6 @@ fun BottomNavigationBar(navController: NavController, currentRoute: String) {
                         }
                     }
                 },
-                label = null,
                 alwaysShowLabel = false
             )
         }

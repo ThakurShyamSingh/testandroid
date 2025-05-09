@@ -1,43 +1,56 @@
+// File: ui/theme/Theme.kt
 package com.example.demotest2.ui.theme
 
-import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.lightColorScheme
-import androidx.compose.runtime.Composable
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.Color
-
-// Define Light/Dark color schemes
-private val DarkColorScheme = darkColorScheme(
-    primary = BlueTrue,
-    secondary = RedFire,
-    background = BackgroundDark,
-    surface = Color(0xFF1A1A1A),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onBackground = Color.White,
-    onSurface = Color.White
-)
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
 
 private val LightColorScheme = lightColorScheme(
     primary = BlueTrue,
-    secondary = RedFire,
+    secondary = RedAccent,
     background = BackgroundLight,
-    surface = Color.White,
+    surface = BackgroundCardLight,
     onPrimary = Color.White,
     onSecondary = Color.White,
-    onBackground = Color.Black,
-    onSurface = Color.Black
+    onBackground = TextLight,
+    onSurface = TextLight
 )
 
+private val DarkColorScheme = darkColorScheme(
+    primary = BlueAccentDark,
+    secondary = RedAccentDark,
+    background = BackgroundDark,
+    surface = BackgroundCardDark,
+    onPrimary = Color.Black,
+    onSecondary = Color.Black,
+    onBackground = TextDark,
+    onSurface = TextDark
+)
+
+// Global state for theme toggle
+var isDarkTheme by mutableStateOf(false)
+
+/**
+ * Applies system-wide theming with status/nav bar sync.
+ */
 @Composable
-fun AppTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+fun DemoTest2Theme(
     content: @Composable () -> Unit
 ) {
-    val colors = if (darkTheme) DarkColorScheme else LightColorScheme
+    val darkTheme = isDarkTheme
+    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
+
+    val systemUiController = rememberSystemUiController()
+    SideEffect {
+        systemUiController.setSystemBarsColor(
+            color = colorScheme.background,
+            darkIcons = !darkTheme
+        )
+    }
+
     MaterialTheme(
-        colorScheme = colors,
+        colorScheme = colorScheme,
         typography = AppTypography,
         shapes = AppShapes,
         content = content
