@@ -35,9 +35,11 @@ fun ClubsScreen(navController: NavController) {
                         )
                     }
                 },
+
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF0D47A1))
             )
         },
+        bottomBar = { BottomNavigationBar(navController, "--") },
         content = { padding ->
             ClubsContent(
                 modifier = Modifier.padding(padding)

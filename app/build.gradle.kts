@@ -82,6 +82,7 @@ dependencies {
     implementation("androidx.compose.material3:material3:1.2.0-alpha05")
     implementation ("androidx.compose.ui:ui:1.5.0")
     implementation ("androidx.compose.ui:ui-tooling:1.5.0")
+    implementation ("com.airbnb.android:lottie-compose:6.0.1")
 
 
 }

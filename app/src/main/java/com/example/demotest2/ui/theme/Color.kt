@@ -1,11 +1,22 @@
+// File: ui/theme/Color.kt
 package com.example.demotest2.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Purple80 = Color(0xFFD0BCFF)
-val PurpleGrey80 = Color(0xFFCCC2DC)
-val Pink80 = Color(0xFFEFB8C8)
+// Primary accent: True Blue (crisp, modern)
+val BlueTrue = Color(0xFF137DC5)
 
-val Purple40 = Color(0xFF6650a4)
-val PurpleGrey40 = Color(0xFF625b71)
-val Pink40 = Color(0xFF7D5260)
+// Secondary accent: Fire Engine Red (bold, attention-grabbing)
+val RedFire = Color(0xFFBF1922)
+
+// Warm neutral: Wood (balances vibrant hues)
+val WoodWarm = Color(0xFFB17A50)
+
+// Soft neutral: Cream (light background in light mode)
+val CreamSoft = Color(0xFFF7E8D3)
+
+// Dark background: Midnight (deep, low-strain dark mode)
+val BackgroundDark = Color(0xFF112D4E)
+
+// Light background: Light Gray (soft on eyes in light mode)
+val BackgroundLight = Color(0xFFF2F2F2)
