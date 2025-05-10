@@ -1,10 +1,7 @@
 package com.example.demotest2.ui
 
+
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -22,7 +19,8 @@ enum class Routes(val route: String) {
     PROFILE_SCREEN("ProfileScreen"),
     ATTENDANCE_SCREEN("AttendanceScreen"),
     CLUBS_SCREEN("ClubsScreen"),
-    FACE_CAPTURE_SCREEN("FaceCaptureScreen"),
+    RECOGNIZE_STUDENTS_SCREEN("RecognizeStudentsScreen"),
+
 }
 
 @Composable
@@ -39,6 +37,7 @@ fun AppNavigation() {
         composable(Routes.PROFILE_SCREEN.route){ ProfileScreen(navController) }
         composable(Routes.ATTENDANCE_SCREEN.route){ AttendanceScreen(navController) }
         composable(Routes.CLUBS_SCREEN.route){ ClubsScreen(navController) }
-        composable(Routes.FACE_CAPTURE_SCREEN.route){ FaceCaptureScreen() }
+        composable(Routes.RECOGNIZE_STUDENTS_SCREEN.route){ RecognizeStudentsScreen(navController) }
+
     }
 }

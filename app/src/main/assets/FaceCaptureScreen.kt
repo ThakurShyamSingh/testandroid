@@ -1,5 +1,3 @@
-package com.example.demotest2.ui.screens
-
 import android.Manifest
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
