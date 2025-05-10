@@ -1,0 +1,227 @@
+
+package com.example.demotest2.face
+
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.Matrix
+import android.graphics.PointF
+import android.graphics.RectF
+import android.util.Log
+import org.tensorflow.lite.Interpreter
+import org.tensorflow.lite.DataType
+import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
+import java.nio.MappedByteBuffer
+import java.nio.channels.FileChannel
+import androidx.core.graphics.scale
+import java.io.FileInputStream
+import kotlin.math.atan2
+
+class FaceEmbeddingProcessor(private val context: Context) {
+
+    private val faceDetector: Interpreter
+    private val landmarkDetector: Interpreter
+    private val embedder: Interpreter
+
+    init {
+        Log.d("FaceEmbeddingProcessor", "Loading models...")
+        faceDetector = Interpreter(loadMappedFile("face_detector.tflite"))
+        Log.d("FaceEmbeddingProcessor", "face_detector.tflite loaded")
+
+        landmarkDetector = Interpreter(loadMappedFile("face_landmarks_detector.tflite"))
+        Log.d("FaceEmbeddingProcessor", "face_landmarks_detector.tflite loaded")
+
+        embedder = Interpreter(loadMappedFile("model.tflite"))
+        Log.d("FaceEmbeddingProcessor", "ArcFace model.tflite loaded")
+    }
+
+    fun getEmbedding(frame: Bitmap): FloatArray? {
+        Log.d("FaceEmbeddingProcessor", "Starting getEmbedding")
+
+        val detection = detectFace(frame)
+        if (detection == null) {
+            Log.d("FaceEmbeddingProcessor", "No face detected")
+            return null
+        }
+
+        Log.d("FaceEmbeddingProcessor", "Face detected: ${detection.boundingBox}")
+        val faceCrop = cropAndAlignFace(frame, detection)
+        Log.d("FaceEmbeddingProcessor", "Face cropped and aligned")
+
+         val landmarks = detectLandmarks(faceCrop)
+         Log.d("FaceEmbeddingProcessor", "Landmarks detected: size = ${landmarks.size}")
+
+        val embedding = computeEmbedding(faceCrop)
+        Log.d("FaceEmbeddingProcessor", "Embedding computed: ${embedding.copyOfRange(0, 5).joinToString()}...")
+        return embedding
+    }
+
+    private fun detectFace(bitmap: Bitmap): FaceDetectionResult? {
+        Log.d("FaceEmbeddingProcessor", "Running face detection")
+        val inp = bitmap.scale(192, 192)
+        val inputBuffer = TensorBuffer.createFixedSize(intArrayOf(1, 192, 192, 3), DataType.FLOAT32)
+        inputBuffer.loadArray(bitmapToNormalizedArray(inp))
+
+        Log.d("FaceEmbeddingProcessor", "Input buffer prepared")
+        Log.d("FaceEmbeddingProcessor",inputBuffer.floatArray.joinToString(", "))
+
+        val outputBoxes = TensorBuffer.createFixedSize(intArrayOf(1, 896, 4), DataType.FLOAT32)
+        Log.d("FaceEmbeddingProcessor", "output boxes created")
+
+        val outputKeypoints = TensorBuffer.createFixedSize(intArrayOf(1, 896, 12), DataType.FLOAT32)
+
+        Log.d("FaceEmbeddingProcessor", "outputkeypoints prepared")
+
+        val outputScores = TensorBuffer.createFixedSize(intArrayOf(1, 896), DataType.FLOAT32)
+
+        Log.d("FaceEmbeddingProcessor", "output scores prepared")
+        Log.d("FaceEmbeddingProcessor",output.floatArray.joinToString(", "))
+
+        val outputs: MutableMap<Int, Any> = HashMap()
+        outputs[0] = outputBoxes.buffer
+        outputs[1] = outputKeypoints.buffer
+        outputs[2] = outputScores.buffer
+
+        faceDetector.runForMultipleInputsOutputs(arrayOf(inputBuffer.buffer), outputs)
+        Log.d("FaceEmbeddingProcessor", "Face detector inference complete")
+
+        val scores = outputScores.floatArray
+        var best = -1; var bestScore = 0.5f
+        for (i in scores.indices) {
+            if (scores[i] > bestScore) {
+                bestScore = scores[i]
+                best = i
+            }
+        }
+        if (best < 0) {
+            Log.d("FaceEmbeddingProcessor", "No detection above threshold")
+            return null
+        }
+
+        val boxArr = outputBoxes.floatArray
+        val ymin = boxArr[best * 4 + 0]
+        val xmin = boxArr[best * 4 + 1]
+        val ymax = boxArr[best * 4 + 2]
+        val xmax = boxArr[best * 4 + 3]
+
+        val width = bitmap.width.toFloat()
+        val height = bitmap.height.toFloat()
+        val rect = RectF(xmin * width, ymin * height, xmax * width, ymax * height)
+
+        val kpArr = outputKeypoints.floatArray
+        val keypoints = mutableListOf<PointF>()
+        for (j in 0 until 6) {
+            val x = kpArr[best * 12 + j * 2 + 0] * width
+            val y = kpArr[best * 12 + j * 2 + 1] * height
+            keypoints.add(PointF(x, y))
+        }
+
+        Log.d("FaceEmbeddingProcessor", "Detection result parsed")
+        return FaceDetectionResult(rect, keypoints)
+    }
+
+    data class FaceDetectionResult(
+        val boundingBox: RectF,
+        val keypoints: List<PointF>
+    )
+
+    private fun cropAndAlignFace(src: Bitmap, det: FaceDetectionResult): Bitmap {
+        Log.d("FaceEmbeddingProcessor", "Cropping and aligning face")
+
+        val box = RectF(det.boundingBox)
+        val w = box.width()
+        val h = box.height()
+        box.inset(-0.25f * w, -0.25f * h)
+        box.left = box.left.coerceAtLeast(0f)
+        box.top = box.top.coerceAtLeast(0f)
+        box.right = box.right.coerceAtMost(src.width.toFloat())
+        box.bottom = box.bottom.coerceAtMost(src.height.toFloat())
+
+        val leftEye = det.keypoints[0]
+        val rightEye = det.keypoints[1]
+        val dy = rightEye.y - leftEye.y
+        val dx = rightEye.x - leftEye.x
+        val angle = Math.toDegrees(atan2(dy.toDouble(), dx.toDouble())).toFloat()
+
+        val matrix = Matrix()
+        matrix.postRotate(-angle, box.centerX(), box.centerY())
+        val rotated = Bitmap.createBitmap(src, 0, 0, src.width, src.height, matrix, true)
+
+        val crop = Bitmap.createBitmap(
+            rotated,
+            box.left.toInt(), box.top.toInt(),
+            box.width().toInt(), box.height().toInt()
+        )
+        Log.d("FaceEmbeddingProcessor", "Face crop and rotation done")
+        return crop.scale(256, 256)
+    }
+
+    private fun detectLandmarks(face256: Bitmap): FloatArray {
+        Log.d("FaceEmbeddingProcessor", "Detecting landmarks")
+        val buf = TensorBuffer.createFixedSize(intArrayOf(1, 256, 256, 3), DataType.FLOAT32)
+        buf.loadArray(bitmapToUnitArray(face256))
+        val out = TensorBuffer.createFixedSize(intArrayOf(1, 478, 3), DataType.FLOAT32)
+        landmarkDetector.run(buf.buffer, out.buffer)
+        Log.d("FaceEmbeddingProcessor", "Landmarks detection complete")
+        return out.floatArray
+    }
+
+    private fun computeEmbedding(face256: Bitmap): FloatArray {
+        Log.d("FaceEmbeddingProcessor", "Computing embedding")
+        val inp = face256.scale(112, 112)
+        val buf = TensorBuffer.createFixedSize(intArrayOf(1, 112, 112, 3), DataType.FLOAT32)
+        buf.loadArray(bitmapToNormalizedArray(inp))
+        val out = TensorBuffer.createFixedSize(intArrayOf(1, 512), DataType.FLOAT32)
+        embedder.run(buf.buffer, out.buffer)
+        Log.d("FaceEmbeddingProcessor", "Embedding computation complete")
+        return out.floatArray
+    }
+
+    private fun loadMappedFile(path: String): MappedByteBuffer {
+        Log.d("FaceEmbeddingProcessor", "Loading model from assets: $path")
+        val afd = context.assets.openFd(path)
+        val fc = FileInputStream(afd.fileDescriptor).channel
+        return fc.map(FileChannel.MapMode.READ_ONLY, afd.startOffset, afd.declaredLength)
+    }
+
+    private fun bitmapToNormalizedArray(bmp: Bitmap): FloatArray {
+        Log.d("FaceEmbeddingProcessor", "Converting bitmap to normalized array [-1,1]")
+        val w = bmp.width
+        val h = bmp.height
+        val px = IntArray(w * h)
+        bmp.getPixels(px, 0, w, 0, 0, w, h)
+        val arr = FloatArray(w * h * 3)
+        var i = 0
+        for (p in px) {
+            val r = (p shr 16 and 0xFF) / 255f
+            val g = (p shr 8 and 0xFF) / 255f
+            val b = (p and 0xFF) / 255f
+            arr[i++] = r * 2 - 1
+            arr[i++] = g * 2 - 1
+            arr[i++] = b * 2 - 1
+        }
+        return arr
+    }
+
+    private fun bitmapToUnitArray(bmp: Bitmap): FloatArray {
+        Log.d("FaceEmbeddingProcessor", "Converting bitmap to unit array [0,1]")
+        val w = bmp.width
+        val h = bmp.height
+        val px = IntArray(w * h)
+        bmp.getPixels(px, 0, w, 0, 0, w, h)
+        val arr = FloatArray(w * h * 3)
+        var i = 0
+        for (p in px) {
+            arr[i++] = (p shr 16 and 0xFF) / 255f
+            arr[i++] = (p shr 8 and 0xFF) / 255f
+            arr[i++] = (p and 0xFF) / 255f
+        }
+        return arr
+    }
+
+    fun close() {
+        Log.d("FaceEmbeddingProcessor", "Closing model interpreters")
+        faceDetector.close()
+        landmarkDetector.close()
+        embedder.close()
+    }
+}

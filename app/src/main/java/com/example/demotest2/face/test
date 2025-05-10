@@ -1,0 +1,246 @@
+package com.example.demotest2.face
+
+import android.content.ContentValues
+import android.content.Context
+import android.graphics.\*
+import android.os.Build
+import android.os.Environment
+import android.provider.MediaStore
+import android.util.Log
+import androidx.core.graphics.scale
+import org.tensorflow\.lite.DataType
+import org.tensorflow\.lite.Interpreter
+import org.tensorflow\.lite.support.tensorbuffer.TensorBuffer
+import java.io.FileInputStream
+import java.io.OutputStream
+import java.nio.MappedByteBuffer
+import java.nio.channels.FileChannel
+import kotlin.math.atan2
+
+class FaceEmbeddingProcessor(private val context: Context) {
+
+```
+private val faceDetector: Interpreter
+private val landmarkDetector: Interpreter
+private val embedder: Interpreter
+
+init {
+    val options = Interpreter.Options().apply {
+        setNumThreads(4)
+        setUseXNNPACK(true)
+    }
+    faceDetector = Interpreter(loadMappedFile("face_detector.tflite"), options)
+    landmarkDetector = Interpreter(loadMappedFile("face_landmarks_detector.tflite"), options)
+    embedder = Interpreter(loadMappedFile("model.tflite"), options)
+}
+
+fun getEmbedding(frame: Bitmap): FloatArray? {
+    val detection = detectFace(frame) ?: return null
+
+    val originalWithPoints = drawLandmarksOnBitmap(frame, detection)
+    saveBitmapToGallery(originalWithPoints, "face_original")
+
+    val cropped = cropFace(frame, detection) ?: return null
+    val croppedWithPoints = drawLandmarksOnBitmap(cropped, detection, adjustToCrop = true)
+    saveBitmapToGallery(croppedWithPoints, "face_cropped")
+
+    val aligned = alignFace(cropped, detection) ?: return null
+    val alignedWithPoints = drawLandmarksOnBitmap(aligned, detection, adjustToCrop = true)
+    saveBitmapToGallery(alignedWithPoints, "face_aligned")
+
+    val finalInput = aligned.scale(112, 112)
+    saveBitmapToGallery(finalInput, "face_final112")
+
+    return computeEmbedding(finalInput)
+}
+
+data class FaceDetectionResult(
+    val boundingBox: RectF,
+    val keypoints: List<PointF>
+)
+
+private fun detectFace(bitmap: Bitmap): FaceDetectionResult? {
+    val resized = Bitmap.createScaledBitmap(bitmap, 128, 128, true)
+    val inputBuffer = TensorBuffer.createFixedSize(intArrayOf(1, 128, 128, 3), DataType.FLOAT32)
+    inputBuffer.loadArray(bitmapToNormalizedArray(resized))
+
+    val outputRegressors = TensorBuffer.createFixedSize(intArrayOf(1, 896, 16), DataType.FLOAT32)
+    val outputScores = TensorBuffer.createFixedSize(intArrayOf(1, 896), DataType.FLOAT32)
+
+    val outputs = mapOf(
+        0 to outputRegressors.buffer,
+        1 to outputScores.buffer
+    )
+    faceDetector.runForMultipleInputsOutputs(arrayOf(inputBuffer.buffer), outputs)
+
+    val scores = outputScores.floatArray
+    var bestIndex = -1
+    var bestScore = 0.5f
+    for (i in scores.indices) {
+        if (scores[i] > bestScore) {
+            bestScore = scores[i]
+            bestIndex = i
+        }
+    }
+    if (bestIndex < 0) return null
+
+    val r = outputRegressors.floatArray
+    val ymin = r[bestIndex * 16 + 0]
+    val xmin = r[bestIndex * 16 + 1]
+    val ymax = r[bestIndex * 16 + 2]
+    val xmax = r[bestIndex * 16 + 3]
+
+    val width = bitmap.width.toFloat()
+    val height = bitmap.height.toFloat()
+    val rect = RectF(xmin * width, ymin * height, xmax * width, ymax * height)
+
+    val keypoints = mutableListOf<PointF>()
+    for (j in 0 until 6) {
+        val x = r[bestIndex * 16 + 4 + j * 2] * width
+        val y = r[bestIndex * 16 + 5 + j * 2] * height
+        keypoints.add(PointF(x, y))
+    }
+
+    return FaceDetectionResult(rect, keypoints)
+}
+
+private fun cropFace(src: Bitmap, det: FaceDetectionResult): Bitmap? {
+    val box = RectF(det.boundingBox)
+    box.inset(-0.25f * box.width(), -0.25f * box.height())
+    box.left = box.left.coerceAtLeast(0f)
+    box.top = box.top.coerceAtLeast(0f)
+    box.right = box.right.coerceAtMost(src.width.toFloat())
+    box.bottom = box.bottom.coerceAtMost(src.height.toFloat())
+
+    return try {
+        Bitmap.createBitmap(
+            src,
+            box.left.toInt(),
+            box.top.toInt(),
+            box.width().toInt(),
+            box.height().toInt()
+        )
+    } catch (e: Exception) {
+        Log.e("Crop", "Failed: ${e.message}")
+        null
+    }
+}
+
+private fun alignFace(bmp: Bitmap, det: FaceDetectionResult): Bitmap? {
+    val leftEye = det.keypoints[0]
+    val rightEye = det.keypoints[1]
+    val dx = rightEye.x - leftEye.x
+    val dy = rightEye.y - leftEye.y
+    val angle = Math.toDegrees(atan2(dy.toDouble(), dx.toDouble())).toFloat()
+
+    val matrix = Matrix().apply {
+        postRotate(-angle)
+    }
+
+    return try {
+        Bitmap.createBitmap(bmp, 0, 0, bmp.width, bmp.height, matrix, true)
+    } catch (e: Exception) {
+        Log.e("Align", "Failed: ${e.message}")
+        null
+    }
+}
+
+private fun computeEmbedding(face112: Bitmap): FloatArray {
+    val buf = TensorBuffer.createFixedSize(intArrayOf(1, 112, 112, 3), DataType.FLOAT32)
+    buf.loadArray(bitmapToNormalizedArray(face112))
+    val out = TensorBuffer.createFixedSize(intArrayOf(1, 512), DataType.FLOAT32)
+    embedder.run(buf.buffer, out.buffer)
+    return out.floatArray
+}
+
+private fun drawLandmarksOnBitmap(bmp: Bitmap, det: FaceDetectionResult, adjustToCrop: Boolean = false): Bitmap {
+    val output = bmp.copy(Bitmap.Config.ARGB_8888, true)
+    val canvas = Canvas(output)
+    val paint = Paint().apply {
+        color = Color.RED
+        style = Paint.Style.FILL
+        strokeWidth = 5f
+    }
+
+    for (pt in det.keypoints) {
+        val x = if (adjustToCrop) pt.x - det.boundingBox.left else pt.x
+        val y = if (adjustToCrop) pt.y - det.boundingBox.top else pt.y
+        canvas.drawCircle(x, y, 5f, paint)
+    }
+
+    val rect = if (!adjustToCrop) det.boundingBox else RectF(
+        0f,
+        0f,
+        det.boundingBox.width(),
+        det.boundingBox.height()
+    )
+    paint.style = Paint.Style.STROKE
+    paint.color = Color.GREEN
+    paint.strokeWidth = 3f
+    canvas.drawRect(rect, paint)
+
+    return output
+}
+
+private fun saveBitmapToGallery(bitmap: Bitmap, name: String) {
+    val filename = "${name}_${System.currentTimeMillis()}.jpg"
+    val contentValues = ContentValues().apply {
+        put(MediaStore.Images.Media.DISPLAY_NAME, filename)
+        put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            put(MediaStore.Images.Media.RELATIVE_PATH, "DCIM/FaceDebug")
+            put(MediaStore.Images.Media.IS_PENDING, 1)
+        }
+    }
+
+    val resolver = context.contentResolver
+    val uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
+    if (uri != null) {
+        resolver.openOutputStream(uri)?.use { outputStream ->
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            contentValues.clear()
+            contentValues.put(MediaStore.Images.Media.IS_PENDING, 0)
+            resolver.update(uri, contentValues, null, null)
+        }
+    }
+}
+
+
+private fun loadMappedFile(path: String): MappedByteBuffer {
+    val afd = context.assets.openFd(path)
+    val fis = FileInputStream(afd.fileDescriptor)
+    return fis.channel.map(FileChannel.MapMode.READ_ONLY, afd.startOffset, afd.declaredLength)
+}
+
+private fun bitmapToNormalizedArray(bmp: Bitmap): FloatArray {
+    val w = bmp.width
+    val h = bmp.height
+    val px = IntArray(w * h).also { bmp.getPixels(it, 0, w, 0, 0, w, h) }
+    return FloatArray(w * h * 3).also { arr ->
+        var i = 0
+        for (p in px) {
+            val r = ((p shr 16) and 0xFF) / 255f
+            val g = ((p shr 8) and 0xFF) / 255f
+            val b = (p and 0xFF) / 255f
+            arr[i++] = r * 2 - 1
+            arr[i++] = g * 2 - 1
+            arr[i++] = b * 2 - 1
+        }
+    }
+}
+```
+
+}
+
+align face is working but
+corpface isnt
+do one thing
+crop hte image uptill a little more than the eyearea
+and mouth area
+you make the estimation
+and then crop it
+only then return the resized image
+and lets continue debugging

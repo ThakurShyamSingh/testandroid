@@ -36,6 +36,7 @@ import com.google.accompanist.permissions.*
 import com.example.demotest2.face.FaceEmbeddingProcessor
 import androidx.compose.ui.viewinterop.AndroidView
 import android.content.Context
+import android.graphics.Matrix
 import androidx.compose.material.icons.filled.Brightness4
 import androidx.compose.material.icons.filled.Brightness7
 import androidx.compose.material.icons.filled.Cloud
@@ -252,28 +253,27 @@ fun RegisterStudentsScreen(navController: NavController) {
                 // 🔘 Register button triggers face embedding
                 Button(
                     onClick = {
-                        if (studentName.isBlank() || studentRollNo.isBlank() || studentDepartment.isBlank() || studentSection.isBlank()) {
-                            Toast.makeText(context, "Please fill in all the fields.", Toast.LENGTH_SHORT).show()
-                            return@Button
-                        }
+//                        if (studentName.isBlank() || studentRollNo.isBlank() || studentDepartment.isBlank() || studentSection.isBlank()) {
+//                            Toast.makeText(context, "Please fill in all the fields.", Toast.LENGTH_SHORT).show()
+//                            return@Button
+//                        }
 
                         imageCapture?.takePicture(
                             ContextCompat.getMainExecutor(context),
                             object : ImageCapture.OnImageCapturedCallback() {
                                 override fun onCaptureSuccess(image: ImageProxy) {
-                                    val bitmap = imageProxyToBitmap(image)
+                                    val bitmap = rotateBitmapLeft(imageProxyToBitmap(image) as Bitmap)
                                     image.close()
-
                                     if (bitmap != null) {
                                         val embedding = faceProcessor.getEmbedding(bitmap)
                                         if (embedding != null) {
                                             Toast.makeText(context, "Face captured!", Toast.LENGTH_SHORT).show()
 
                                             val studentData = mapOf(
-                                                "name" to studentName,
-                                                "rollNo" to studentRollNo,
-                                                "department" to studentDepartment,
-                                                "section" to studentSection,
+                                                "name" to "name",
+                                                "rollNo" to "name",
+                                                "department" to "name",
+                                                "section" to "name",
                                                 "embedding" to embedding.toList() // convert FloatArray to List<Float> for JSON
                                             )
 
@@ -353,3 +353,9 @@ fun saveStudentJsonLocally(context: Context, studentJson: String) {
     Log.d("registerstudentscreen","Student data saved to ${file.absolutePath}")
 }
 
+fun rotateBitmapLeft(bitmap: Bitmap): Bitmap {
+    val matrix = Matrix().apply {
+        postRotate(-90f) // Counterclockwise
+    }
+    return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+}
