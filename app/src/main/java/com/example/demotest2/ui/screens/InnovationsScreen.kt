@@ -75,6 +75,7 @@ fun InnovationsScreen(navController: NavController) {
                         title = "New Ideas",
                         description = "Explore the latest ideas and innovations.",
                         onClick = {
+                            navController.navigate("FaceCaptureScreen")
 //                            navController.navigate("NewIdeas")
                         }
                     )

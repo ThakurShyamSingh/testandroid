@@ -37,6 +37,16 @@ android {
     buildFeatures {
         compose = true
     }
+
+    androidResources {
+        noCompress += "tflite"
+    }
+
+    sourceSets {
+        getByName("main") {
+            assets.srcDirs("src/main/assets") // Correct way to include assets
+        }
+    }
 }
 
 dependencies {
@@ -62,6 +72,22 @@ dependencies {
     implementation("com.airbnb.android:lottie-compose:6.0.1")
     implementation("com.google.accompanist:accompanist-systemuicontroller:0.30.1")
     implementation ("androidx.compose.material:material-icons-extended:1.7.8")
+
+//    implementation ("org.tensorflow:tensorflow-lite:2.9.0") // Add TensorFlow Lite dependency
+    implementation ("org.tensorflow:tensorflow-lite-support:0.5.0")
+
+
+    implementation ("androidx.camera:camera-camera2:1.3.0")
+    implementation ("androidx.camera:camera-lifecycle:1.3.0")
+    implementation ("androidx.camera:camera-view:1.3.0")
+    implementation ("androidx.camera:camera-core:1.3.0")
+    implementation ("androidx.camera:camera-extensions:1.3.0")
+    implementation ("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
+
+    implementation ("com.google.accompanist:accompanist-permissions:0.35.0-alpha")
+
+
+
 
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)

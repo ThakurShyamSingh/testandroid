@@ -8,7 +8,6 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
 import com.example.demotest2.ui.screens.*
 
 
@@ -22,15 +21,13 @@ enum class Routes(val route: String) {
     NEWS_SCREEN("NewsScreen"),
     PROFILE_SCREEN("ProfileScreen"),
     ATTENDANCE_SCREEN("AttendanceScreen"),
-    CLUBS_SCREEN("ClubsScreen")
+    CLUBS_SCREEN("ClubsScreen"),
+    FACE_CAPTURE_SCREEN("FaceCaptureScreen"),
 }
 
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
-    val context = LocalContext.current
-    val lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current
-
     NavHost(navController = navController, startDestination = Routes.MAIN_SCREEN.route) {
         composable(Routes.COURSE_MATERIAL.route) { CourseMaterialScreen(navController) }
         composable(Routes.MAIN_SCREEN.route) {MainScreen(navController) }
@@ -42,6 +39,6 @@ fun AppNavigation() {
         composable(Routes.PROFILE_SCREEN.route){ ProfileScreen(navController) }
         composable(Routes.ATTENDANCE_SCREEN.route){ AttendanceScreen(navController) }
         composable(Routes.CLUBS_SCREEN.route){ ClubsScreen(navController) }
-
+        composable(Routes.FACE_CAPTURE_SCREEN.route){ FaceCaptureScreen() }
     }
 }
